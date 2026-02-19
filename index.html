@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Manager - Gestión de Clientes</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <div class="logo">
+        <span class="logo-icon">&#127970;</span>
+        <div>
+          <h1>Hotel Manager</h1>
+          <p>Sistema de Gestión de Clientes</p>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-card">
+          <span class="stat-number" id="totalClientes">0</span>
+          <span class="stat-label">Clientes</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="clientesHoy">0</span>
+          <span class="stat-label">Nuevos Hoy</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">&#128269;</span>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Buscar por nombre, email, habitación..."
+          oninput="filtrarClientes()"
+        />
+        <button class="btn-clear-search" onclick="limpiarBusqueda()" id="btnClearSearch" style="display:none">&#10005;</button>
+      </div>
+      <div class="toolbar-actions">
+        <select id="filterEstado" onchange="filtrarClientes()" class="select-filter">
+          <option value="">Todos los estados</option>
+          <option value="activo">Activo</option>
+          <option value="checkout">Check-out</option>
+          <option value="reserva">Reserva</option>
+        </select>
+        <button class="btn btn-primary" onclick="abrirModalNuevo()">
+          &#43; Nuevo Cliente
+        </button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+      <table id="tablaClientes">
+        <thead>
+          <tr>
+            <th onclick="ordenarPor('nombre')" class="sortable">Nombre <span class="sort-icon">&#8597;</span></th>
+            <th onclick="ordenarPor('email')" class="sortable">Email <span class="sort-icon">&#8597;</span></th>
+            <th>Teléfono</th>
+            <th onclick="ordenarPor('habitacion')" class="sortable">Habitación <span class="sort-icon">&#8597;</span></th>
+            <th onclick="ordenarPor('checkIn')" class="sortable">Check-in <span class="sort-icon">&#8597;</span></th>
+            <th onclick="ordenarPor('checkOut')" class="sortable">Check-out <span class="sort-icon">&#8597;</span></th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTabla">
+        </tbody>
+      </table>
+      <div id="sinResultados" class="empty-state" style="display:none">
+        <span class="empty-icon">&#128566;</span>
+        <p>No se encontraron clientes</p>
+        <small>Intenta con otros términos de búsqueda</small>
+      </div>
+    </div>
+
+    <div class="table-footer">
+      <span id="resultCount"></span>
+    </div>
+
+  </main>
+
+  <!-- Modal: Crear / Editar Cliente -->
+  <div id="modal" class="modal-overlay" onclick="cerrarModalFondo(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitulo">Nuevo Cliente</h2>
+        <button class="btn-close" onclick="cerrarModal()">&#10005;</button>
+      </div>
+      <form id="formCliente" onsubmit="guardarCliente(event)">
+        <input type="hidden" id="clienteId" />
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="nombre">Nombre completo *</label>
+            <input type="text" id="nombre" required placeholder="Ej: María García López" />
+          </div>
+          <div class="form-group">
+            <label for="email">Correo electrónico *</label>
+            <input type="email" id="email" required placeholder="cliente@email.com" />
+          </div>
+          <div class="form-group">
+            <label for="telefono">Teléfono *</label>
+            <input type="tel" id="telefono" required placeholder="+52 55 1234 5678" />
+          </div>
+          <div class="form-group">
+            <label for="documento">Documento (DNI / Pasaporte) *</label>
+            <input type="text" id="documento" required placeholder="AB-12345678" />
+          </div>
+          <div class="form-group">
+            <label for="habitacion">Número de habitación *</label>
+            <input type="text" id="habitacion" required placeholder="Ej: 301" />
+          </div>
+          <div class="form-group">
+            <label for="tipoHabitacion">Tipo de habitación</label>
+            <select id="tipoHabitacion">
+              <option value="individual">Individual</option>
+              <option value="doble">Doble</option>
+              <option value="suite">Suite</option>
+              <option value="familiar">Familiar</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="checkIn">Fecha de Check-in *</label>
+            <input type="date" id="checkIn" required />
+          </div>
+          <div class="form-group">
+            <label for="checkOut">Fecha de Check-out *</label>
+            <input type="date" id="checkOut" required />
+          </div>
+          <div class="form-group">
+            <label for="estado">Estado</label>
+            <select id="estado">
+              <option value="reserva">Reserva</option>
+              <option value="activo">Activo (Hospedado)</option>
+              <option value="checkout">Check-out</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="nacionalidad">Nacionalidad</label>
+            <input type="text" id="nacionalidad" placeholder="Ej: Mexicana" />
+          </div>
+          <div class="form-group form-group-full">
+            <label for="notas">Notas adicionales</label>
+            <textarea id="notas" rows="3" placeholder="Peticiones especiales, alergias, preferencias..."></textarea>
+          </div>
+        </div>
+        <div class="form-error" id="formError" style="display:none"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btnGuardar">Guardar Cliente</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Ver Detalle -->
+  <div id="modalDetalle" class="modal-overlay" onclick="cerrarDetallesFondo(event)">
+    <div class="modal modal-detalle">
+      <div class="modal-header">
+        <h2>Detalle del Cliente</h2>
+        <button class="btn-close" onclick="cerrarDetalles()">&#10005;</button>
+      </div>
+      <div id="detalleContenido"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarDetalles()">Cerrar</button>
+        <button class="btn btn-warning" id="btnEditarDetalle" onclick="">Editar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmar Eliminar -->
+  <div id="modalEliminar" class="modal-overlay" onclick="cerrarEliminarFondo(event)">
+    <div class="modal modal-small">
+      <div class="modal-header danger">
+        <h2>Eliminar Cliente</h2>
+        <button class="btn-close" onclick="cerrarEliminar()">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <div class="warning-icon">&#9888;</div>
+        <p>¿Estás seguro de que deseas eliminar al cliente <strong id="nombreEliminar"></strong>?</p>
+        <p class="warning-text">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarEliminar()">Cancelar</button>
+        <button class="btn btn-danger" id="btnConfirmarEliminar" onclick="">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
